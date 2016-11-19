@@ -1,0 +1,133 @@
+---
+title: "Assignment 10"
+author: "Nimish Sakalle"
+date: "NOvember 19, 2016"
+output:
+  html_document:
+    keep_md: yes
+  pdf_document: default
+  word_document: default
+subtitle: Analysis.
+---
+  
+```{r}
+## The first step is to load R libraries that are required for the analysis.
+
+library(plyr)
+library(ggplot2)
+library(knitr)
+```
+###**Making environment ready**
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(root.dir = "~/RProject/Assignment10")
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+###** Reading from file into data frame **
+
+```{r}
+# Setting working directory
+setwd("C:\\RProject\\Assignment 10")
+
+# Reading file into GDP data frame
+ny1raw <- read.csv("nyt1.csv", header=TRUE)
+
+#keeping backup of original file for future
+ny1backup <- ny1raw
+
+# Checking for file header names.
+names(ny1raw)
+
+# Files header and first few attributes.
+head(ny1raw)
+
+# This commands give information about attributes data type.
+str(ny1raw)
+
+# This is to get the number of rows in file.
+NROW(ny1raw)
+```
+
+###** Creating data grouping into variable AgeGroup **
+```{r}
+ny1raw$Agegroup <- cut(ny1raw$Age, c(-Inf,18,24,34,44,54,64,Inf))
+ny1raw$Agegroup = factor(ny1raw$Agegroup,labels=c("<18","18-24","25-34","35-44","45-54","55-64","65+"))
+head(ny1raw)
+```
+###** CReating subset for Impression >0 **
+```{r}
+Impsub <- subset(ny1raw, Impressions>0)
+head(Impsub)
+```
+###** New variable Click Through Rate **
+```{r}
+Impsub$CTR <- Impsub$Clicks/Impsub$Impressions
+head(Impsub)
+```
+###** Analysis of Click Stream  **
+###** gPlot distributions of number impressions and click-through-rate (CTR = click/impression) for the age groups**
+```{r}
+ggplot(subset(Impsub, CTR>0), aes(x=CTR, fill=Agegroup))+labs(title='Click through rate by Age Group')+ geom_histogram(binwidth = .020)
+
+```
+###** new variable CTR Behavior**
+```{r}
+Impsub$CTR <- cut(Impsub$CTR, c(-Inf, .2,.4,.6,.8, Inf))
+Impsub$CTR <- factor(Impsub$CTR, labels=c("<.2",".2-.4",".4-.6",".6-.8",">.8"))
+head(Impsub)
+```
+###**Subset for male and Female and sum of Impression, CLicks and Signed_In**
+```{r}
+ImpsubMale <- subset(Impsub,Gender==1)
+# Total number of Male
+nrow(ImpsubMale)
+ImpsubFemale <- subset(Impsub,Gender==0)
+
+# Total number of Female
+nrow(ImpsubFemale)
+
+# Total Number of Impression
+sum(Impsub$Impressions)
+
+# Total Number of Clicks
+sum(Impsub$Clicks)
+
+# Total Number of Clicks
+sum(Impsub$Signed_In)
+
+```
+###**Mean of Age, Impressions, CLicks, and percentage of males and Signed_In**
+```{r}
+# Mean of Age
+mean(Impsub$Age)
+#Mean of Clicks
+mean(Impsub$Clicks)
+#Mean of Impressions
+mean(Impsub$Impressions)
+#Mean of Signed In
+mean(Impsub$Signed_In)
+```
+###**Mean of Age, Impressions, CLicks, and percentage of males and Signed_In by Age Group**
+```{r}
+# Mean of Age by agegroup
+aggregate(Impsub[,1], list(Impsub$Agegroup), mean)
+
+# Mean of Clicks by agegroup
+aggregate(Impsub[,4], list(Impsub$Agegroup), mean)
+
+# Mean of Impression by agegroup
+aggregate(Impsub[,3], list(Impsub$Agegroup), mean)
+
+# Mean of Signed_In by agegroup
+aggregate(Impsub[,5], list(Impsub$Agegroup), mean)
+```
+
+###** Create a table of CTRGroup vs AgeGroup counts **
+```{r}
+table(Impsub$CTR,Impsub$Agegroup)
+```
+##** Histogram of Clicks by ageGroup **
+```{r}
+ggplot(Impsub, aes(x=Clicks, fill=Agegroup))+geom_histogram(binwidth = 1)
+```
+###EOF###
